@@ -1,0 +1,23 @@
+.load-more {
+    display: block;
+    margin: 0 auto;
+    padding: 1vw 4vw;
+    background: #242446;
+    text-align: center;
+    color: #fff;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 250ms;
+    
+    &:focus,
+    &:hover {
+        background-color: #373b44;
+    }
+
+    &.is-hidden {
+        visibility: hidden;
+        pointer-events: none;
+        position: absolute;
+    }
+}
