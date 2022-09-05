@@ -8,7 +8,7 @@
     row-gap: 1vw;    
 }
 
-.photo-card {
+.gallery-link {
     position: relative;
     
     border-radius: 1vw;
@@ -21,10 +21,10 @@
 
     img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: 300px;
+        object-fit: cover;        
     }
-
+    
     .info {
         position: absolute;
         bottom: 0;
@@ -43,6 +43,7 @@
     }
 
     .info-item {
+        color: black;        
         text-align: center;
         font-size: 0.7vw;
     }
@@ -51,3 +52,4 @@
         display: block;
     }
 }
+

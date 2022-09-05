@@ -1,6 +1,9 @@
-import './sass/index.scss';
-import axios from 'axios'; 
+import './sass/index.scss'; 
 import { Notify } from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import "simplelightbox/dist/simple-lightbox.min.css";
+import { imgTamplates } from './js/tamplates';
+import { fetchData } from './js/fetchImges';
 
 
 const galleryEl = document.querySelector('.gallery');
@@ -9,33 +12,64 @@ const loadMoreEl = document.querySelector('.load-more')
 
 const KEY = '29585981-4b31f207c2d4bfdf8784d9dec';
 
+
 let page = 1;
-let items = [];
-let input = '';
+let inputValue = '';
 
-axios.defaults.baseURL = 'https://pixabay.com/api/?';
+const simpleLightboxGallery = new SimpleLightbox('.gallery a', {
+    caption: true,
+    captionsData: 'alt',
+    captionDelay: 250,
+    captionClass: 'caption',
+});
 
-function imgTamplates ({ webformatURL, likes, views, comments, downloads, tags }) {
-    return `<div class="photo-card">
-                <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-                <div class="info">
-                    <p class="info-item">
-                        <b>Likes<span>${likes}</span></b>
-                    </p>
-                    <p class="info-item">
-                        <b>Views<span>${views}</span></b>
-                    </p>
-                    <p class="info-item">
-                        <b>Comments<span>${comments}</span></b>
-                    </p>
-                    <p class="info-item">
-                        <b>Downloads<span>${downloads}</span></b>
-                    </p>
-                </div>
-            </div>`
+submitEl.addEventListener('submit', onSubmit);
+loadMoreEl.addEventListener('click', onClick);
+
+async function onSubmit(e) {
+    e.preventDefault();
+    page = 1;
+
+    if (inputValue === e.target.elements.searchQuery.value.trim()) {
+        return;
+    }
+
+    if (inputValue !== e.target.elements.searchQuery.value.trim()) {
+        galleryEl.innerHTML = '';
+        buttonOff();
+    }
+
+    inputValue = e.target.elements.searchQuery.value.trim();
+    console.log(inputValue);
+    const response = await fetchData(KEY, inputValue, page);
+
+    if (inputValue === '') return;
+
+    if (response.data.totalHits === 0) {
+        Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+        return;
+    }       
+
+    render(response.data.hits);
+    simpleLightboxGallery.refresh();    
+    buttonOn();
+
 }
 
-function render() {
+async function onClick(e) {
+    page += 1;    
+
+    const response = await fetchData(KEY, inputValue, page);
+    render(response.data.hits);
+
+    if (response.data.totalHits > 40 && (response.data.totalHits) / 40 < page) {
+        Notify.failure(`We're sorry, but you've reached the end of search results.`);
+        buttonOff();
+        return;
+    }
+}
+
+function render(items) {
     const listImgCard = items.map((item) => imgTamplates(item)).join('');
     galleryEl.insertAdjacentHTML('beforeend', listImgCard);
 }
@@ -47,53 +81,3 @@ function buttonOff() {
 function buttonOn() {
     loadMoreEl.classList.remove('is-hidden');
 }
-
-async function fetchData() {
-    try {
-        const response = await axios.get(`&key=${KEY}&q=${input}&orientation=horizontal&safesearch=true&image_type=photo&page=${page}&per_page=40`);
-        items = [...response.data.hits];
-        console.log(response.data);
-
-        if (items.length === 0) {
-            Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-            return;
-        } 
-        
-        if (page > ((response.data.totalHits)/40)) {
-            Notify.failure(`We're sorry, but you've reached the end of search results.`);
-            buttonOff();
-            return;
-        }
-        
-        render();
-        buttonOn();
-    } catch (error) {
-        console.error(error);
-    }
-}   
-
-function onSubmit(e) {
-    e.preventDefault();
-
-    if (e.target.elements.searchQuery.value === input) return;
-
-    if (e.target.elements.searchQuery.value !== input) {        
-        galleryEl.innerHTML = '';
-        input = e.target.elements.searchQuery.value;
-    }
-    
-    buttonOff();
-    fetchData();
-    
-}
-
-function onClick(e) {
-    page += 1;
-
-    fetchData();
-    // console.log(e.target);
-}
-
-submitEl.addEventListener('submit', onSubmit);
-loadMoreEl.addEventListener('click', onClick);
-
