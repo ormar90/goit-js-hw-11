@@ -29,6 +29,7 @@ loadMoreEl.addEventListener('click', onClick);
 async function onSubmit(e) {
     e.preventDefault();
     page = 1;
+    
 
     if (inputValue === e.target.elements.searchQuery.value.trim()) {
         return;
@@ -41,19 +42,23 @@ async function onSubmit(e) {
 
     inputValue = e.target.elements.searchQuery.value.trim();
     console.log(inputValue);
-    const response = await fetchData(KEY, inputValue, page);
+    const response = await fetchData(KEY, inputValue, page);    
 
     if (inputValue === '') return;
 
     if (response.data.totalHits === 0) {
         Notify.failure('Sorry, there are no images matching your search query. Please try again.');
         return;
-    }       
+    } 
+    
+    if (Math.ceil(response.data.totalHits / 40) <= page) {
+        buttonOff();
+    } else {
+        buttonOn();
+    }
 
-    render(response.data.hits);
-    simpleLightboxGallery.refresh();    
-    buttonOn();
-
+    render(response.data.hits); 
+    simpleLightboxGallery.refresh();
 }
 
 async function onClick(e) {
@@ -61,8 +66,9 @@ async function onClick(e) {
 
     const response = await fetchData(KEY, inputValue, page);
     render(response.data.hits);
+    simpleLightboxGallery.refresh();
 
-    if (response.data.totalHits > 40 && (response.data.totalHits) / 40 < page) {
+    if (Math.ceil(response.data.totalHits / 40)<= page) {
         Notify.failure(`We're sorry, but you've reached the end of search results.`);
         buttonOff();
         return;
